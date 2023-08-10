@@ -251,7 +251,8 @@ class LLMEngine:
             arrival_time = time.time()
         if prompt_token_ids is None:
             assert prompt is not None
-            prompt_token_ids = self.tokenizer.encode(prompt)
+            # note: this is specific to Baichuan model. We need to append user and assistant token ids for consistency.
+            prompt_token_ids = [195] + self.tokenizer.encode(prompt) + [196]
 
         # Create the sequences.
         block_size = self.cache_config.block_size
