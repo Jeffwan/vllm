@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# YAPF formatter, adapted from ray and skypilot...
+# YAPF formatter, adapted from ray and skypilot....
 #
 # Usage:
 #    # Do work and commit your work.
