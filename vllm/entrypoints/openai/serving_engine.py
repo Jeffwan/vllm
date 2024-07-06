@@ -25,7 +25,7 @@ logger = init_logger(__name__)
 @dataclass
 class LoRAModulePath:
     name: str
-    local_path: str
+    path: str
 
 
 class OpenAIServing:
@@ -56,7 +56,7 @@ class OpenAIServing:
                 LoRARequest(
                     lora_name=lora.name,
                     lora_int_id=i,
-                    lora_local_path=lora.local_path,
+                    lora_path=lora.path,
                 ) for i, lora in enumerate(lora_modules, start=1)
             ]
 
