@@ -166,6 +166,25 @@ async def create_embedding(request: EmbeddingRequest, raw_request: Request):
     else:
         return JSONResponse(content=generator.model_dump())
 
+from pydantic import BaseModel
+
+class AddLoraRequest(BaseModel):
+    lora_name: str
+    lora_path: str
+
+class RemoveLoraRequest(BaseModel):
+    lora_int_id: int
+
+@app.post("/add_lora")
+async def add_lora(request: AddLoraRequest):
+    openai_serving_chat.add_lora(request.lora_name, request.lora_path)
+    return Response(status_code=200)
+
+@app.post("/remove_lora")
+async def remove_lora(request: RemoveLoraRequest):
+    openai_serving_chat.remove_lora(request.lora_int_id)
+    return Response(status_code=200)
+
 
 if __name__ == "__main__":
     args = parse_args()

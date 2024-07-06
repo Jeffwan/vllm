@@ -207,3 +207,14 @@ class OpenAIServing:
         if logprob.decoded_token is not None:
             return logprob.decoded_token
         return self.tokenizer.decode(token_id)
+
+    def add_lora(self, lora_name, lora_path):
+        self.lora_requests.append(LoRARequest(
+            lora_name=lora_name,
+            lora_int_id=len(self.lora_requests) + 1,
+            lora_local_path=lora_path
+        ))
+
+    def remove_lora(self, lora_int_id):
+        # Filter out the request with the matching lora_int_id
+        self.lora_requests = [request for request in self.lora_requests if request.lora_int_id != lora_int_id]
