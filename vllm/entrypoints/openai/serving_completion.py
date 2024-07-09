@@ -21,7 +21,8 @@ from vllm.entrypoints.openai.protocol import (CompletionLogProbs,
                                               TokenizeRequest,
                                               TokenizeResponse, UsageInfo)
 # yapf: enable
-from vllm.entrypoints.openai.serving_engine import (LoRAModulePath,
+from vllm.entrypoints.openai.serving_engine import (BaseModelPath,
+                                                    LoRAModulePath,
                                                     OpenAIServing,
                                                     PromptAdapterPath)
 from vllm.logger import init_logger
@@ -67,12 +68,12 @@ def parse_prompt_format(prompt) -> Tuple[bool, list]:
 class OpenAIServingCompletion(OpenAIServing):
 
     def __init__(self, engine: AsyncLLMEngine, model_config: ModelConfig,
-                 served_model_names: List[str],
+                 base_model_paths: List[BaseModelPath],
                  lora_modules: Optional[List[LoRAModulePath]],
                  prompt_adapters: Optional[List[PromptAdapterPath]]):
         super().__init__(engine=engine,
                          model_config=model_config,
-                         served_model_names=served_model_names,
+                         base_model_paths=base_model_paths,
                          lora_modules=lora_modules,
                          prompt_adapters=prompt_adapters)
 
@@ -96,7 +97,7 @@ class OpenAIServingCompletion(OpenAIServing):
             return self.create_error_response(
                 "suffix is not currently supported")
 
-        model_name = self.served_model_names[0]
+        model_name = self.base_model_paths[0].name
         request_id = f"cmpl-{random_uuid()}"
         created_time = int(time.time())
 

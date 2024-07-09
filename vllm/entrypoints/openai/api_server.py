@@ -29,10 +29,11 @@ from vllm.entrypoints.openai.protocol import (ChatCompletionRequest,
                                               EmbeddingRequest, ErrorResponse,
                                               TokenizeRequest,
                                               TokenizeResponse)
-# yapf: enable
 from vllm.entrypoints.openai.serving_chat import OpenAIServingChat
 from vllm.entrypoints.openai.serving_completion import OpenAIServingCompletion
 from vllm.entrypoints.openai.serving_embedding import OpenAIServingEmbedding
+# yapf: enable
+from vllm.entrypoints.openai.serving_engine import BaseModelPath
 from vllm.logger import init_logger
 from vllm.usage.usage_lib import UsageContext
 from vllm.version import __version__ as VLLM_VERSION
@@ -210,6 +211,10 @@ if __name__ == "__main__":
         served_model_names = args.served_model_name
     else:
         served_model_names = [args.model]
+    base_model_paths = [
+        BaseModelPath(name=name, model_path=args.model)
+        for name in served_model_names
+    ]
 
     engine_args = AsyncEngineArgs.from_cli_args(args)
 
@@ -231,15 +236,15 @@ if __name__ == "__main__":
         model_config = asyncio.run(engine.get_model_config())
 
     openai_serving_chat = OpenAIServingChat(engine, model_config,
-                                            served_model_names,
+                                            base_model_paths,
                                             args.response_role,
                                             args.lora_modules,
                                             args.chat_template)
     openai_serving_completion = OpenAIServingCompletion(
-        engine, model_config, served_model_names, args.lora_modules,
+        engine, model_config, base_model_paths, args.lora_modules,
         args.prompt_adapters)
     openai_serving_embedding = OpenAIServingEmbedding(engine, model_config,
-                                                      served_model_names)
+                                                      base_model_paths)
     app.root_path = args.root_path
 
     logger.info("Available routes are:")

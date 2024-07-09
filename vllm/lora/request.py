@@ -21,6 +21,7 @@ class LoRARequest(AdapterRequest):
     lora_name: str
     lora_int_id: int
     lora_local_path: str
+    base_model_id: str
     long_lora_max_len: Optional[int] = None
     __hash__ = AdapterRequest.__hash__
 

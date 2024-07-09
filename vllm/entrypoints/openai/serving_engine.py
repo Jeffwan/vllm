@@ -24,6 +24,12 @@ logger = init_logger(__name__)
 
 
 @dataclass
+class BaseModelPath:
+    name: str
+    model_path: str
+
+
+@dataclass
 class PromptAdapterPath:
     name: str
     local_path: str
@@ -33,6 +39,7 @@ class PromptAdapterPath:
 class LoRAModulePath:
     name: str
     local_path: str
+    base_model_name: Optional[str] = None
 
 
 class OpenAIServing:
@@ -41,7 +48,7 @@ class OpenAIServing:
         self,
         engine: AsyncLLMEngine,
         model_config: ModelConfig,
-        served_model_names: List[str],
+        base_model_paths: List[BaseModelPath],
         lora_modules: Optional[List[LoRAModulePath]],
         prompt_adapters: Optional[List[PromptAdapterPath]] = None,
     ):
@@ -59,7 +66,7 @@ class OpenAIServing:
             trust_remote_code=model_config.trust_remote_code,
             truncation_side="left")
 
-        self.served_model_names = served_model_names
+        self.base_model_paths = base_model_paths
 
         self.lora_requests = []
         if lora_modules is not None:
@@ -68,7 +75,10 @@ class OpenAIServing:
                     lora_name=lora.name,
                     lora_int_id=i,
                     lora_local_path=lora.local_path,
-                ) for i, lora in enumerate(lora_modules, start=1)
+                    base_model_id=lora.base_model_name if lora.base_model_name
+                    and self._is_model_supported(lora.base_model_name) else
+                    self.base_model_paths[0].name)
+                for i, lora in enumerate(lora_modules, start=1)
             ]
 
         self.prompt_adapter_requests = []
@@ -88,21 +98,22 @@ class OpenAIServing:
     async def show_available_models(self) -> ModelList:
         """Show available models. Right now we only have one model."""
         model_cards = [
-            ModelCard(id=served_model_name,
+            ModelCard(id=base_model.name,
                       max_model_len=self.max_model_len,
-                      root=self.served_model_names[0],
+                      root=base_model.model_path,
                       permission=[ModelPermission()])
-            for served_model_name in self.served_model_names
+            for base_model in self.base_model_paths
         ]
         lora_cards = [
             ModelCard(id=lora.lora_name,
-                      root=self.served_model_names[0],
+                      root=lora.lora_local_path,
+                      parent=lora.base_model_id,
                       permission=[ModelPermission()])
             for lora in self.lora_requests
         ]
         prompt_adapter_cards = [
             ModelCard(id=prompt_adapter.prompt_adapter_name,
-                      root=self.served_model_names[0],
+                      root=self.base_model_paths[0].name,
                       permission=[ModelPermission()])
             for prompt_adapter in self.prompt_adapter_requests
         ]
@@ -137,7 +148,7 @@ class OpenAIServing:
                              DetokenizeRequest, EmbeddingRequest,
                              TokenizeRequest]
     ) -> Optional[ErrorResponse]:
-        if request.model in self.served_model_names:
+        if self._is_model_supported(request.model):
             return None
         if request.model in [lora.lora_name for lora in self.lora_requests]:
             return None
@@ -156,7 +167,7 @@ class OpenAIServing:
                              EmbeddingRequest]
     ) -> Tuple[Optional[str], Optional[Union[LoRARequest,
                                              PromptAdapterRequest]]]:
-        if request.model in self.served_model_names:
+        if self._is_model_supported(request.model):
             return None, None
         for lora in self.lora_requests:
             if request.model == lora.lora_name:
@@ -248,3 +259,6 @@ class OpenAIServing:
         if logprob.decoded_token is not None:
             return logprob.decoded_token
         return self.tokenizer.decode(token_id)
+
+    def _is_model_supported(self, model_name):
+        return any(model.name == model_name for model in self.base_model_paths)
