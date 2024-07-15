@@ -1,3 +1,4 @@
+import warnings
 from dataclasses import dataclass
 from typing import Optional
 
@@ -24,6 +25,17 @@ class LoRARequest(AdapterRequest):
     long_lora_max_len: Optional[int] = None
     __hash__ = AdapterRequest.__hash__
 
+    def __post_init__(self):
+        if 'lora_local_path' in self.__dict__:
+            warnings.warn(
+                "The 'lora_local_path' attribute is deprecated "
+                "and will be removed in a future version. "
+                "Please use 'lora_path' instead.",
+                DeprecationWarning,
+                stacklevel=2)
+            if not self.lora_path:
+                self.lora_path = self.lora_local_path
+
     @property
     def adapter_id(self):
         return self.lora_int_id
@@ -34,4 +46,20 @@ class LoRARequest(AdapterRequest):
 
     @property
     def local_path(self):
-        return self.lora_local_path
+        warnings.warn(
+            "The 'local_path' attribute is deprecated "
+            "and will be removed in a future version. "
+            "Please use 'lora_path' instead.",
+            DeprecationWarning,
+            stacklevel=2)
+        return self.lora_path
+
+    @local_path.setter
+    def local_path(self, value):
+        warnings.warn(
+            "The 'local_path' attribute is deprecated "
+            "and will be removed in a future version. "
+            "Please use 'lora_path' instead.",
+            DeprecationWarning,
+            stacklevel=2)
+        self.lora_path = value
