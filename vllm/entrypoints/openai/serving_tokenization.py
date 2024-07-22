@@ -9,7 +9,7 @@ from vllm.entrypoints.openai.protocol import (DetokenizeRequest,
                                               DetokenizeResponse,
                                               TokenizeRequest,
                                               TokenizeResponse)
-from vllm.entrypoints.openai.serving_engine import OpenAIServing
+from vllm.entrypoints.openai.serving_engine import BaseModelPath, OpenAIServing
 
 
 class OpenAIServingTokenization(OpenAIServing):
@@ -17,11 +17,11 @@ class OpenAIServingTokenization(OpenAIServing):
     def __init__(self,
                  engine: AsyncLLMEngine,
                  model_config: ModelConfig,
-                 served_model_names: List[str],
+                 base_model_paths: List[BaseModelPath],
                  chat_template: Optional[str] = None):
         super().__init__(engine=engine,
                          model_config=model_config,
-                         served_model_names=served_model_names,
+                         base_model_paths=base_model_paths,
                          lora_modules=None)
 
         load_chat_template(self, chat_template)

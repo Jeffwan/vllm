@@ -37,6 +37,7 @@ from vllm.entrypoints.openai.serving_completion import OpenAIServingCompletion
 from vllm.entrypoints.openai.serving_embedding import OpenAIServingEmbedding
 from vllm.entrypoints.openai.serving_tokenization import (
     OpenAIServingTokenization)
+from vllm.entrypoints.openai.serving_engine import BaseModelPath
 from vllm.logger import init_logger
 from vllm.usage.usage_lib import UsageContext
 from vllm.utils import FlexibleArgumentParser
@@ -251,6 +252,11 @@ def run_server(args, llm_engine=None):
     else:
         served_model_names = [args.model]
 
+    base_model_paths = [
+        BaseModelPath(name=name, model_path=args.model)
+        for name in served_model_names
+    ]
+
     global engine, engine_args
 
     engine_args = AsyncEngineArgs.from_cli_args(args)
@@ -278,17 +284,17 @@ def run_server(args, llm_engine=None):
     global openai_serving_tokenization
 
     openai_serving_chat = OpenAIServingChat(engine, model_config,
-                                            served_model_names,
+                                            base_model_paths,
                                             args.response_role,
                                             args.lora_modules,
                                             args.chat_template)
     openai_serving_completion = OpenAIServingCompletion(
-        engine, model_config, served_model_names, args.lora_modules,
+        engine, model_config, base_model_paths, args.lora_modules,
         args.prompt_adapters)
     openai_serving_embedding = OpenAIServingEmbedding(engine, model_config,
-                                                      served_model_names)
+                                                      base_model_paths)
     openai_serving_tokenization = OpenAIServingTokenization(
-        engine, model_config, served_model_names, args.chat_template)
+        engine, model_config, base_model_paths, args.chat_template)
     app.root_path = args.root_path
 
     logger.info("Available routes are:")

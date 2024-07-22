@@ -22,6 +22,7 @@ class LoRARequest(AdapterRequest):
     lora_name: str
     lora_int_id: int
     lora_path: str = ""
+    base_model_id: str
     lora_local_path: Optional[str] = field(default=None, repr=False)
     long_lora_max_len: Optional[int] = None
 
