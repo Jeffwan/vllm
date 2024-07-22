@@ -763,8 +763,9 @@ class DetokenizeResponse(OpenAIBaseModel):
 class LoadLoraAdapterRequest(BaseModel):
     lora_name: str
     lora_path: str
+    lora_base_model: Optional[str] = Field(default=None)
 
 
 class UnloadLoraAdapterRequest(BaseModel):
     lora_name: str
-    lora_int_id: int
+    lora_int_id: Optional[int] = Field(default=None)

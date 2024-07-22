@@ -109,8 +109,9 @@ class OpenAIServing:
         ]
         lora_cards = [
             ModelCard(id=lora.lora_name,
-                      root=lora.lora_local_path,
-                      parent=lora.base_model_id,
+                      root=lora.lora_path,
+                      parent=lora.base_model_id
+                      if lora.base_model_id else self.base_model_paths[0].name,
                       permission=[ModelPermission()])
             for lora in self.lora_requests
         ]
@@ -313,18 +314,21 @@ class OpenAIServing:
         if error_check_ret is not None:
             return error_check_ret
 
-        lora_name, lora_path = request.lora_name, request.lora_path
+        lora_name = request.lora_name
+        lora_path = request.lora_path
+        lora_base_model = request.lora_base_model
         unique_id = len(self.lora_requests) + 1
         self.lora_requests.append(
             LoRARequest(lora_name=lora_name,
                         lora_int_id=unique_id,
-                        lora_path=lora_path))
+                        lora_path=lora_path,
+                        base_model_id=lora_base_model))
         return f"Success: LoRA adapter '{lora_name}' added successfully."
 
     async def unload_lora_adapter(
             self,
             request: UnloadLoraAdapterRequest) -> Union[ErrorResponse, str]:
-        error_check_ret = await self._check_load_lora_adapter_request(request)
+        error_check_ret = await self._check_unload_lora_adapter_request(request)
         if error_check_ret is not None:
             return error_check_ret
 
