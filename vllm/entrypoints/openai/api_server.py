@@ -35,9 +35,9 @@ from vllm.entrypoints.openai.protocol import (ChatCompletionRequest,
 from vllm.entrypoints.openai.serving_chat import OpenAIServingChat
 from vllm.entrypoints.openai.serving_completion import OpenAIServingCompletion
 from vllm.entrypoints.openai.serving_embedding import OpenAIServingEmbedding
+from vllm.entrypoints.openai.serving_engine import BaseModelPath
 from vllm.entrypoints.openai.serving_tokenization import (
     OpenAIServingTokenization)
-from vllm.entrypoints.openai.serving_engine import BaseModelPath
 from vllm.logger import init_logger
 from vllm.usage.usage_lib import UsageContext
 from vllm.utils import FlexibleArgumentParser
@@ -163,6 +163,7 @@ async def create_embedding(request: EmbeddingRequest, raw_request: Request):
                             status_code=generator.code)
     else:
         return JSONResponse(content=generator.model_dump())
+
 
 @router.post("/v1/load_lora_adapter")
 async def load_lora_adapter(request: LoadLoraAdapterRequest):

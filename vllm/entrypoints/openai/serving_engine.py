@@ -25,11 +25,11 @@ from vllm.transformers_utils.tokenizer import get_tokenizer
 
 logger = init_logger(__name__)
 
+
 @dataclass
 class BaseModelPath:
     name: str
     model_path: str
-
 
 
 @dataclass
@@ -263,7 +263,6 @@ class OpenAIServing:
             return logprob.decoded_token
         return self.tokenizer.decode(token_id)
 
-
     async def _check_load_lora_adapter_request(
             self, request: LoadLoraAdapterRequest) -> Optional[ErrorResponse]:
         # Check if both 'lora_name' and 'lora_path' are provided
@@ -335,7 +334,6 @@ class OpenAIServing:
             if lora_request.lora_name != lora_name
         ]
         return f"Success: LoRA adapter '{lora_name}' removed successfully."
-
 
     def _is_model_supported(self, model_name):
         return any(model.name == model_name for model in self.base_model_paths)
