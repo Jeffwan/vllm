@@ -32,8 +32,10 @@ from vllm.entrypoints.openai.protocol import (ChatCompletionRequest,
                                               DetokenizeRequest,
                                               DetokenizeResponse,
                                               EmbeddingRequest, ErrorResponse,
+                                              LoadLoraAdapterRequest,
                                               TokenizeRequest,
-                                              TokenizeResponse)
+                                              TokenizeResponse,
+                                              UnloadLoraAdapterRequest)
 from vllm.entrypoints.openai.rpc.client import AsyncEngineRPCClient
 from vllm.entrypoints.openai.rpc.server import run_rpc_server
 # yapf: enable
@@ -223,6 +225,36 @@ async def create_embedding(request: EmbeddingRequest, raw_request: Request):
                             status_code=generator.code)
     else:
         return JSONResponse(content=generator.model_dump())
+
+
+@router.post("/v1/load_lora_adapter")
+async def load_lora_adapter(request: LoadLoraAdapterRequest):
+    response = await openai_serving_chat.load_lora_adapter(request)
+    if isinstance(response, ErrorResponse):
+        return JSONResponse(content=response.model_dump(),
+                            status_code=response.code)
+
+    response = await openai_serving_completion.load_lora_adapter(request)
+    if isinstance(response, ErrorResponse):
+        return JSONResponse(content=response.model_dump(),
+                            status_code=response.code)
+
+    return Response(status_code=200)
+
+
+@router.post("/v1/unload_lora_adapter")
+async def unload_lora_adapter(request: UnloadLoraAdapterRequest):
+    response = await openai_serving_chat.unload_lora_adapter(request)
+    if isinstance(response, ErrorResponse):
+        return JSONResponse(content=response.model_dump(),
+                            status_code=response.code)
+
+    response = await openai_serving_completion.unload_lora_adapter(request)
+    if isinstance(response, ErrorResponse):
+        return JSONResponse(content=response.model_dump(),
+                            status_code=response.code)
+
+    return Response(status_code=200)
 
 
 def build_app(args):
