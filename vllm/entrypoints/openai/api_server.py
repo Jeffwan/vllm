@@ -45,6 +45,7 @@ from vllm.entrypoints.openai.rpc.server import run_rpc_server
 from vllm.entrypoints.openai.serving_chat import OpenAIServingChat
 from vllm.entrypoints.openai.serving_completion import OpenAIServingCompletion
 from vllm.entrypoints.openai.serving_embedding import OpenAIServingEmbedding
+from vllm.entrypoints.openai.serving_engine import BaseModelPath
 from vllm.entrypoints.openai.serving_tokenization import (
     OpenAIServingTokenization)
 from vllm.logger import init_logger
@@ -440,6 +441,10 @@ async def init_app(
         served_model_names = [args.model]
 
     model_config = await async_engine_client.get_model_config()
+    base_model_paths = [
+        BaseModelPath(name=name, model_path=args.model)
+        for name in served_model_names
+    ]
 
     if args.disable_log_requests:
         request_logger = None
@@ -454,7 +459,7 @@ async def init_app(
     openai_serving_chat = OpenAIServingChat(
         async_engine_client,
         model_config,
-        served_model_names,
+        base_model_paths,
         args.response_role,
         lora_modules=args.lora_modules,
         prompt_adapters=args.prompt_adapters,
@@ -466,7 +471,7 @@ async def init_app(
     openai_serving_completion = OpenAIServingCompletion(
         async_engine_client,
         model_config,
-        served_model_names,
+        base_model_paths,
         lora_modules=args.lora_modules,
         prompt_adapters=args.prompt_adapters,
         request_logger=request_logger,
@@ -475,13 +480,13 @@ async def init_app(
     openai_serving_embedding = OpenAIServingEmbedding(
         async_engine_client,
         model_config,
-        served_model_names,
+        base_model_paths,
         request_logger=request_logger,
     )
     openai_serving_tokenization = OpenAIServingTokenization(
         async_engine_client,
         model_config,
-        served_model_names,
+        base_model_paths,
         lora_modules=args.lora_modules,
         request_logger=request_logger,
         chat_template=args.chat_template,

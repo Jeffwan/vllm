@@ -22,7 +22,8 @@ from vllm.entrypoints.openai.protocol import (
     ChatCompletionResponseChoice, ChatCompletionResponseStreamChoice,
     ChatCompletionStreamResponse, ChatMessage, DeltaFunctionCall, DeltaMessage,
     DeltaToolCall, ErrorResponse, FunctionCall, ToolCall, UsageInfo)
-from vllm.entrypoints.openai.serving_engine import (LoRAModulePath,
+from vllm.entrypoints.openai.serving_engine import (BaseModelPath,
+                                                    LoRAModulePath,
                                                     OpenAIServing,
                                                     PromptAdapterPath,
                                                     TextTokensPrompt)
@@ -46,7 +47,7 @@ class OpenAIServingChat(OpenAIServing):
     def __init__(self,
                  async_engine_client: AsyncEngineClient,
                  model_config: ModelConfig,
-                 served_model_names: List[str],
+                 base_model_paths: List[BaseModelPath],
                  response_role: str,
                  *,
                  lora_modules: Optional[List[LoRAModulePath]],
@@ -56,9 +57,10 @@ class OpenAIServingChat(OpenAIServing):
                  return_tokens_as_token_ids: bool = False,
                  enable_auto_tools: bool = False,
                  tool_parser: Optional[str] = None):
+
         super().__init__(async_engine_client=async_engine_client,
                          model_config=model_config,
-                         served_model_names=served_model_names,
+                         base_model_paths=base_model_paths,
                          lora_modules=lora_modules,
                          prompt_adapters=prompt_adapters,
                          request_logger=request_logger,
@@ -244,7 +246,7 @@ class OpenAIServingChat(OpenAIServing):
         conversation: List[ConversationMessage],
         tokenizer: AnyTokenizer,
     ) -> AsyncGenerator[str, None]:
-        model_name = self.served_model_names[0]
+        model_name = self.base_model_paths[0].name
         created_time = int(time.time())
         chunk_object_type: Final = "chat.completion.chunk"
         first_iteration = True
@@ -556,7 +558,7 @@ class OpenAIServingChat(OpenAIServing):
         tokenizer: AnyTokenizer,
     ) -> Union[ErrorResponse, ChatCompletionResponse]:
 
-        model_name = self.served_model_names[0]
+        model_name = self.base_model_paths[0].name
         created_time = int(time.time())
         final_res: Optional[RequestOutput] = None
 
