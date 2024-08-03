@@ -135,6 +135,7 @@ async def build_async_engine_client(args) -> AsyncIterator[AsyncEngineClient]:
 
 
 router = APIRouter()
+lora_adapter_router = APIRouter()
 
 
 def mount_metrics(app: fastapi.FastAPI):
@@ -227,7 +228,8 @@ async def create_embedding(request: EmbeddingRequest, raw_request: Request):
         return JSONResponse(content=generator.model_dump())
 
 
-@router.post("/v1/load_lora_adapter")
+# TODO(jiaxin.shan): protect endpoint and make it visible to operators only
+@lora_adapter_router.post("/v1/load_lora_adapter")
 async def load_lora_adapter(request: LoadLoraAdapterRequest):
     response = await openai_serving_chat.load_lora_adapter(request)
     if isinstance(response, ErrorResponse):
@@ -242,7 +244,7 @@ async def load_lora_adapter(request: LoadLoraAdapterRequest):
     return Response(status_code=200)
 
 
-@router.post("/v1/unload_lora_adapter")
+@lora_adapter_router.post("/v1/unload_lora_adapter")
 async def unload_lora_adapter(request: UnloadLoraAdapterRequest):
     response = await openai_serving_chat.unload_lora_adapter(request)
     if isinstance(response, ErrorResponse):
@@ -260,6 +262,9 @@ async def unload_lora_adapter(request: UnloadLoraAdapterRequest):
 def build_app(args):
     app = fastapi.FastAPI(lifespan=lifespan)
     app.include_router(router)
+    if args.enable_lora_router:
+        app.include_router(lora_adapter_router)
+
     app.root_path = args.root_path
 
     mount_metrics(app)
