@@ -146,6 +146,14 @@ class VineyardLLMCache:
             context_len = seq_data.get_num_computed_tokens()
             token_chunk_size = seq_group_metadata.token_chunk_size
             tokens = seq_data.get_prompt_token_ids()
+            print("-------")
+            print(context_len)
+            print(token_chunk_size)
+            print(len(tokens))
+            print("-------")
+            print(self.chunk_size)
+            print(token_chunk_size)
+            print("********")
 
             # leave at least one token unmatched
             token_chunk_size -= 1
@@ -155,6 +163,11 @@ class VineyardLLMCache:
             query_token_size = context_len + token_chunk_size - query_context_len
             query_prefix = tokens[:query_context_len]
             query_tokens = tokens[query_context_len:query_context_len + query_token_size]
+
+            print(query_context_len)
+            print(query_token_size)
+            print("")
+
             query_args = [
                 seq_id,
                 context_len,
