@@ -17,9 +17,8 @@ set -ex
 
 kill_gpu_processes() {
   # kill all processes on GPU.
-  pkill -f pt_main_thread
-  pkill -f python3
-  ps -e | grep pt_main_thread | awk '{print $1}' | xargs kill -9
+  pgrep pt_main_thread | xargs -r kill -9
+  pgrep python3 | xargs -r kill -9
   for port in 8000 8100 8200; do lsof -t -i:$port | xargs -r kill -9; done
   sleep 1
 }
@@ -36,23 +35,21 @@ wait_for_server() {
 
 
 launch_chunked_prefill() {
-  model="meta-llama/Meta-Llama-3.1-70B-Instruct"
+  model="Qwen/Qwen2.5-7B-Instruct"
   # disagg prefill
-  CUDA_VISIBLE_DEVICES=0,1,2,3 python3 \
+  CUDA_VISIBLE_DEVICES=0 python3 \
       -m vllm.entrypoints.openai.api_server \
       --model $model \
       --port 8100 \
-      -tp 4 \
       --max-model-len 10000 \
       --disable-log-stats \
       --disable-log-requests \
       --enable-chunked-prefill \
       --gpu-memory-utilization 0.8 &
-  CUDA_VISIBLE_DEVICES=4,5,6,7 python3 \
+  CUDA_VISIBLE_DEVICES=1 python3 \
     -m vllm.entrypoints.openai.api_server \
     --model $model \
     --port 8200 \
-    -tp 4 \
     --max-model-len 10000 \
     --disable-log-stats \
     --disable-log-requests \
@@ -66,22 +63,20 @@ launch_chunked_prefill() {
 
 
 launch_disagg_prefill() {
-  model="meta-llama/Meta-Llama-3.1-70B-Instruct" 
+  model="Qwen/Qwen2.5-7B-Instruct"
   # disagg prefill
-  VLLM_PORT=12345 VLLM_DISTRIBUTED_KV_ROLE=producer CUDA_VISIBLE_DEVICES=0,1,2,3 python3 \
+  VLLM_PORT=12345 VLLM_DISTRIBUTED_KV_ROLE=producer CUDA_VISIBLE_DEVICES=0 python3 \
       -m vllm.entrypoints.openai.api_server \
       --model $model \
       --port 8100 \
-      -tp 4 \
       --max-model-len 10000 \
       --disable-log-stats \
       --disable-log-requests \
       --gpu-memory-utilization 0.8 &
-  VLLM_PORT=12345 VLLM_DISTRIBUTED_KV_ROLE=consumer CUDA_VISIBLE_DEVICES=4,5,6,7 python3 \
+  VLLM_PORT=12345 VLLM_DISTRIBUTED_KV_ROLE=consumer CUDA_VISIBLE_DEVICES=1 python3 \
     -m vllm.entrypoints.openai.api_server \
     --model $model \
     --port 8200 \
-    -tp 4 \
     --max-model-len 10000 \
     --disable-log-stats \
     --disable-log-requests \
@@ -95,7 +90,7 @@ launch_disagg_prefill() {
 
 benchmark() {
   results_folder="./results"
-  model="meta-llama/Meta-Llama-3.1-70B-Instruct"
+  model="Qwen/Qwen2.5-7B-Instruct"
   dataset_name="sonnet"
   dataset_path="../sonnet_4x.txt"
   num_prompts=200
