@@ -45,7 +45,7 @@ launch_chunked_prefill() {
       --disable-log-stats \
       --disable-log-requests \
       --enable-chunked-prefill \
-      --gpu-memory-utilization 0.8 &
+      --gpu-memory-utilization 0.7 &
   CUDA_VISIBLE_DEVICES=1 python3 \
     -m vllm.entrypoints.openai.api_server \
     --model $model \
@@ -54,7 +54,7 @@ launch_chunked_prefill() {
     --disable-log-stats \
     --disable-log-requests \
     --enable-chunked-prefill \
-    --gpu-memory-utilization 0.8 &
+    --gpu-memory-utilization 0.7 &
   wait_for_server 8100
   wait_for_server 8200
   python3 round_robin_proxy.py &
@@ -72,7 +72,7 @@ launch_disagg_prefill() {
       --max-model-len 10000 \
       --disable-log-stats \
       --disable-log-requests \
-      --gpu-memory-utilization 0.8 &
+      --gpu-memory-utilization 0.7 &
   VLLM_PORT=12345 VLLM_DISTRIBUTED_KV_ROLE=consumer CUDA_VISIBLE_DEVICES=1 python3 \
     -m vllm.entrypoints.openai.api_server \
     --model $model \
@@ -80,7 +80,7 @@ launch_disagg_prefill() {
     --max-model-len 10000 \
     --disable-log-stats \
     --disable-log-requests \
-    --gpu-memory-utilization 0.8 &
+    --gpu-memory-utilization 0.7 &
   wait_for_server 8100
   wait_for_server 8200
   python3 disagg_prefill_proxy_server.py &
